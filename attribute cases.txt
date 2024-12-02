@@ -1,0 +1,6 @@
+role/permission{
+    Admin
+    Staff
+    Research Student
+    Temporary Staff
+}

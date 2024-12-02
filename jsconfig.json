@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
+    "baseUrl": "src"
+  },
+  "include": ["next-env.d.js", "src/**/*", "src/views/inventory-page.js", "src/hooks/useUser.js", "pages/findUser.js"], // Add "src/views/sample-page.js" to include the missing file
+  "exclude": ["node_modules"]
+}

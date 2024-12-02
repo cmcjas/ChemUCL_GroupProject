@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userID          Int             @id @default(autoincrement())
+  email           String          @unique
+  name            String
+  activeStatus    Boolean         @default(true)
+  researchGroupID Int?            // Nullable if you want to allow users without a group
+  researchGroup   ResearchGroup?  @relation(fields: [researchGroupID], references: [researchGroupID])
+  permission      String          @default("Research Student")
+  logs            Log[]
+}
+
+
+model Chemical {
+  chemicalID        Int           @id @default(autoincrement())
+  casNumber         String?
+  restrictionStatus Boolean
+  restrictionDescription String?
+  chemicalName              String
+  locationID        Int
+  location          Location      @relation(fields: [locationID], references: [locationID])
+  activeStatus      Boolean       @default(true)
+  researchGroupID   Int?
+  researchGroup     ResearchGroup? @relation(fields: [researchGroupID], references: [researchGroupID])
+  supplier          String?
+  description       String?
+  chemicalType      String      @default("Chemical")
+  auditStatus       Boolean      @default(false)
+  lastAudit         DateTime?
+  quartzyNumber     String?
+  qrID              Int?         @unique
+  qrCode            QrCode?   
+  quantity          Int          @default(1) // New quantity field added here
+  dateAdded         DateTime      @default(now())
+  dateUpdated       DateTime      @updatedAt
+  logs              Log[]
+  @@map("chemicals")
+}
+
+model ResearchGroup {
+  researchGroupID       Int        @id @default(autoincrement())
+  groupName     String
+  users         User[]     // This will automatically create a many-to-one relation
+  chemicals     Chemical[]
+}
+
+enum QrCodeType {
+  CHEMICAL
+  LOCATION
+  NEW
+}
+
+model QrCode {
+  qrID      Int        @id @default(autoincrement())
+  type      QrCodeType
+  // Assuming one-to-one relations
+  location  Location?  @relation(fields: [locationID], references: [locationID])
+  chemical  Chemical?  @relation(fields: [chemicalID], references: [chemicalID])
+  locationID  Int?     @unique
+  chemicalID  Int?     @unique
+}
+
+model Location {
+  locationID   Int        @id @default(autoincrement())
+  building     String     
+  room         String     
+  subLocation1 String?     
+  subLocation2 String?     
+  subLocation3 String?     
+  subLocation4 String?     
+  qrID         Int?       
+  qrCode       QrCode?
+  chemicals    Chemical[] // This line establishes the opposite relation field
+
+  @@map("locations")
+}
+
+model Log {
+  logID       Int       @id @default(autoincrement())
+  userID      Int
+  user        User      @relation(fields: [userID], references: [userID])
+  actionType  String    // For example, "CREATE", "UPDATE", "DELETE"
+  chemicalID  Int? 
+  chemical    Chemical?  @relation(fields: [chemicalID], references: [chemicalID])     
+  description String    // A description of the action, e.g., "Updated chemical CAS Number"
+  timestamp   DateTime  @default(now()) // The time the action was performed
+
+  @@map("logs")
+}
